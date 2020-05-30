@@ -36,6 +36,22 @@ public class BookDb extends TryCatchDb<Book> {
         return nextSeq;
     }
     
+    /**
+     * 指定したユーザの本の件数を取得する。
+     * @param userId
+     * @return 
+     */
+    public Integer countBooks(String userId) {
+        TypedQuery<Long> q = em.createNamedQuery(Book.BOOK_COUNTBOOKS, Long.class);
+        q.setParameter("userId", userId);
+        Integer result = 0;
+        Long count = q.getSingleResult();
+        if (count != null) {
+            result = count.intValue();
+        }
+        return result;
+    }
+    
     public List<Book> searchBook (RestSearchCondition cond) throws ParseException {
         StringBuilder query = new StringBuilder();
         query.append("SELECT b");

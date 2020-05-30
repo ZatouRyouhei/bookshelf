@@ -22,6 +22,12 @@ import javax.persistence.TemporalType;
             query =   "SELECT MAX(b.key.seqNo)"
                     + "  FROM Book b"
                     + " WHERE b.key.userId = :userId"
+    ),
+    @NamedQuery (
+            name = Book.BOOK_COUNTBOOKS,
+            query =   "SELECT COUNT(b)"
+                    + "  FROM Book b"
+                    + " WHERE b.key.userId = :userId"
     )
 })
 @Entity
@@ -29,6 +35,7 @@ import javax.persistence.TemporalType;
 @Cacheable(false)
 public class Book implements Serializable {
     public static final String BOOK_GETMAXSEQ = "BOOK_GETMAXSEQ";
+    public static final String BOOK_COUNTBOOKS = "BOOK_COUNTBOOKS";
     
     public static final int SIZE_TITLE = 50;
     public static final int SIZE_AUTHOR = 50;

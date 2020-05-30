@@ -17,6 +17,12 @@ public class RestUser {
     public RestUser() {
     }
 
+    public RestUser(User user) {
+        this.id = user.getId();
+        this.name = user.getName();
+        this.roleName = user.getRoleName();
+    }
+
     public String getId() {
         return id;
     }

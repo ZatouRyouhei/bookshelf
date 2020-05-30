@@ -1,13 +1,20 @@
 package rest.service;
 
+import db.BookDb;
 import db.UserDb;
 import entity.User;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import rest.dto.RestUser;
@@ -22,6 +29,8 @@ import utils.SHA256Encoder;
 public class UserResource {
     @Inject
     UserDb userdb;
+    @Inject
+    BookDb bookdb;
     
     @POST
     @Path("/login")
@@ -63,5 +72,58 @@ public class UserResource {
             // IDが存在しない。
             throw new NotFoundException();
         }
+    }
+    
+    @GET
+    @Path("/getList")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<RestUser> getList() {
+        return userdb.getAll()
+                        .stream()
+                        .map(user -> new RestUser(user))
+                        .sorted(Comparator.comparing(RestUser::getId))
+                        .collect(Collectors.toList());
+    }
+    
+    @POST
+    @Path("/regist")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public void registUser(RestUser restUser) {
+        User targetUser = userdb.search(restUser.getId());
+        if (targetUser == null) {
+            // 初期パスワード
+            SHA256Encoder encoder = new SHA256Encoder();
+            String iniPassword = encoder.encodePassword("111111");
+            User registUser = new User();
+            registUser.setId(restUser.getId());
+            registUser.setPassword(iniPassword);
+            registUser.setName(restUser.getName());
+            registUser.setRoleName(restUser.getRoleName());
+            userdb.add(registUser);
+        } else {
+            targetUser.setName(restUser.getName());
+            targetUser.setRoleName(restUser.getRoleName());
+            userdb.update(targetUser);
+        }
+    }
+    
+    @DELETE
+    @Path("/delete/{id}")
+    public Integer deleteUser(@PathParam("id") String id) {
+        User targetUser = userdb.search(id);
+        Integer result = 0;
+        if (targetUser != null) {
+            if (bookdb.countBooks(id).equals(0)) {
+                // 削除する。
+                userdb.delete(targetUser);
+                result = 1;
+            } else {
+                // 本のデータが登録されているので登録不可。
+            }
+        } else {
+            // IDが存在しない。
+            throw new NotFoundException();
+        }
+        return result;
     }
 }
